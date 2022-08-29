@@ -19,8 +19,7 @@ const options = {
     minuteIncrement: 1,
     onClose(selectedDates) {
         const selectedDate = selectedDates[0];
-        if (selectedDate < Date.now()) {
-            btnStart.disabled = true;
+        if (selectedDate < new Date()) {
           window.alert('Please choose a date in the future!');
         }
         btnStart.disabled = false;
@@ -30,46 +29,39 @@ const options = {
 
 flatpickr(dateTimePicker, options);
 
-class Timer {
-  constructor() {
-    this.isActive = false;
-    this.intervalId = null;
-    btnStart.disabled = true;
-  }
+btnStart.addEventListener('click', onStartClick);
 
-  start() {
-    if (this.isActive) {
-      return;
-    }
-
-    this.isActive = true;
-    this.intervalId = setInterval(() => {
-      btnStart.disabled = true;
-      const currentTime = Date.now();
-      const deltaTime = userData - currentTime;
-      const components = convertMs(deltaTime);
-
-      dataDays.textContent = components.days;
-      dataHours.textContent = components.hours;
-      dataMinutes.textContent = components.minutes;
-      dataSeconds.textContent = components.seconds;
-
-      if (deltaTime <= 0) {
-        this.stop();
-      }
-    }, DELAY);
-  }
-
-  stop() {
-    clearInterval(this.intervalId);
-  }
+function onStartClick() {
+  timer.start(userData);
+  btnStart.disabled = true;
 }
 
-btnStart.addEventListener('click', () => {
-  timer.start();
-});
+class Timer {
+    constructor({ onTick }) {
+        this.isActive = false;
+        this.intervalId = null;
+        this.onTick = onTick;
+    }
 
-const timer = new Timer();
+    start(startTime) {
+        if (this.isActive) {
+            return;
+        }
+        this.isActive = true;
+
+        this.intervalId = setInterval(() => {
+            const currentTime = Date.now();
+            const deltaTime = startTime - currentTime;
+            const components = this.convertMs(deltaTime);
+
+            if (deltaTime < 1000) {
+                clearInterval(this.intervalID);
+                this.isActive = false;
+            }
+            this.onTick(components);
+        }, DELAY);
+    }
+}
 
 function addLeadingZero(value) {
   return String(value).padStart(2, '0');
@@ -83,14 +75,15 @@ function convertMs(ms) {
   const day = hour * 24;
 
   // Remaining days
-  const days = Math.floor(ms / day);
+  const days = this.addLeadingZero(Math.floor(ms / day));
   // Remaining hours
-  const hours = Math.floor((ms % day) / hour);
+  const hours = this.addLeadingZero(Math.floor((ms % day) / hour));
   // Remaining minutes
-  const minutes = Math.floor(((ms % day) % hour) / minute);
+  const minutes = this.addLeadingZero(Math.floor(((ms % day) % hour) / minute));
   // Remaining seconds
-  const seconds = 
-    Math.floor(((ms % day) % hour) % minute) / second;
+  const seconds = this.addLeadingZero(
+    Math.floor(((ms % day) % hour) % minute) / second
+  );
 
   return { days, hours, minutes, seconds };
 }
@@ -98,3 +91,16 @@ function convertMs(ms) {
 console.log(convertMs(2000)); // {days: 0, hours: 0, minutes: 0, seconds: 2}
 console.log(convertMs(140000)); // {days: 0, hours: 0, minutes: 2, seconds: 20}
 console.log(convertMs(24140000)); // {days: 0, hours: 6 minutes: 42, seconds: 20}
+
+const timer = new Timer({
+  onTick: onUpdateClock,
+});
+
+function onUpdateClock({ days, hours, minutes, seconds }) {
+  dataDays.textContent = `${days}`;
+  dataHours.textContent = `${hours}`;
+  dataMinutes.textContent = `${minutes}`;
+  dataSeconds.textContent = `${seconds}`;
+}
+
+
