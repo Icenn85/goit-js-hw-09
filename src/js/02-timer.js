@@ -10,7 +10,7 @@ const dataSeconds = document.querySelector('[data-seconds]');
 
 btnStart.disabled = true;
 let userData = null;
-DELAY = 1000;
+const DELAY = 1000;
 
 const options = {
     enableTime: true,
@@ -52,7 +52,7 @@ class Timer {
         this.intervalId = setInterval(() => {
             const currentTime = Date.now();
             const deltaTime = startTime - currentTime;
-            const components = this.convertMs(deltaTime);
+            const components = convertMs(deltaTime);
 
             if (deltaTime < 1000) {
                 clearInterval(this.intervalID);
@@ -75,14 +75,14 @@ function convertMs(ms) {
   const day = hour * 24;
 
   // Remaining days
-  const days = this.addLeadingZero(Math.floor(ms / day));
+  const days = addLeadingZero(Math.floor(ms / day));
   // Remaining hours
-  const hours = this.addLeadingZero(Math.floor((ms % day) / hour));
+  const hours = addLeadingZero(Math.floor((ms % day) / hour));
   // Remaining minutes
-  const minutes = this.addLeadingZero(Math.floor(((ms % day) % hour) / minute));
+  const minutes = addLeadingZero(Math.floor(((ms % day) % hour) / minute));
   // Remaining seconds
-  const seconds = this.addLeadingZero(
-    Math.floor(((ms % day) % hour) % minute) / second
+  const seconds = addLeadingZero(
+    Math.floor((((ms % day) % hour) % minute) / second)
   );
 
   return { days, hours, minutes, seconds };
