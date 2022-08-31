@@ -9,7 +9,6 @@ const dataMinutes = document.querySelector('[data-minutes]');
 const dataSeconds = document.querySelector('[data-seconds]');
 
 btnStart.disabled = true;
-let userData = null;
 const DELAY = 1000;
 
 const options = {
@@ -18,49 +17,53 @@ const options = {
     defaultDate: new Date(),
     minuteIncrement: 1,
     onClose(selectedDates) {
-        const selectedDate = selectedDates[0];
-        if (selectedDate < new Date()) {
+      const selectedDate = selectedDates[0].getTime();
+      const currentDate = Date.now();
+        if (currentDate > selectedDate) {
           window.alert('Please choose a date in the future!');
+          return;
         }
         btnStart.disabled = false;
-        userData = selectedDates[0];
     }
 };
 
-flatpickr(dateTimePicker, options);
+const datePicker = flatpickr(dateTimePicker, options);
 
-btnStart.addEventListener('click', onStartClick);
+btnStart.addEventListener('click', () => {
+  timer.start();
+});
 
-function onStartClick() {
-  timer.start(userData);
-  btnStart.disabled = true;
-}
+const timer = {
+  isActive: false,
+  intervalId: null,
 
-class Timer {
-    constructor({ onTick }) {
+  start() {
+    if (this.isActive) {
+      return;
+    }
+    this.isActive = true;
+    const startTime = datePicker.selectedDates[0];
+
+    this.intervalId = setInterval(() => {
+      const currentTime = Date.now();
+      const deltaTime = startTime - currentTime;
+
+      if (deltaTime < 0) {
+        clearInterval(this.intervalID);
         this.isActive = false;
-        this.intervalId = null;
-        this.onTick = onTick;
-    }
+        return;
+      }
+      const components = convertMs(deltaTime);
+      onUpdateClock(components);
+    }, DELAY);
+  },
+};
 
-    start(startTime) {
-        if (this.isActive) {
-            return;
-        }
-        this.isActive = true;
-
-        this.intervalId = setInterval(() => {
-            const currentTime = Date.now();
-            const deltaTime = startTime - currentTime;
-            const components = convertMs(deltaTime);
-
-            if (deltaTime < 1000) {
-                clearInterval(this.intervalID);
-                this.isActive = false;
-            }
-            this.onTick(components);
-        }, DELAY);
-    }
+function onUpdateClock({ days, hours, minutes, seconds }) {
+  dataDays.textContent = `${days}`;
+  dataHours.textContent = `${hours}`;
+  dataMinutes.textContent = `${minutes}`;
+  dataSeconds.textContent = `${seconds}`;
 }
 
 function addLeadingZero(value) {
@@ -92,15 +95,6 @@ console.log(convertMs(2000)); // {days: 0, hours: 0, minutes: 0, seconds: 2}
 console.log(convertMs(140000)); // {days: 0, hours: 0, minutes: 2, seconds: 20}
 console.log(convertMs(24140000)); // {days: 0, hours: 6 minutes: 42, seconds: 20}
 
-const timer = new Timer({
-  onTick: onUpdateClock,
-});
 
-function onUpdateClock({ days, hours, minutes, seconds }) {
-  dataDays.textContent = `${days}`;
-  dataHours.textContent = `${hours}`;
-  dataMinutes.textContent = `${minutes}`;
-  dataSeconds.textContent = `${seconds}`;
-}
 
 
